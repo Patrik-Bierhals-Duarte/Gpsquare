@@ -1,36 +1,27 @@
 import tkinter as tk
 
-
-TAMANHO = 5
+TAMANHO = 8
 TAMANHO_CELULA = 60
-
 
 COR_FUNDO = "#2B2B2B"
 COR_LINHA = "#FFFFFF"
 COR_OBSTACULO = "#CC0000"
 COR_CAMINHO = "#00CC00"
-COR_INICIO = "#0066FF"
-COR_DESTINO = "#FFD700"
-
 
 proximo_passo = False
-
 
 def criar_tabuleiro():
     tabuleiro = [[" " for _ in range(TAMANHO)] for _ in range(TAMANHO)]
 
-
     obstaculos = [
-        (2, 1), (4, 1), (2, 3),
-        (1, 2), (4, 4), (1, 4),(0, 0)
+        (2, 1), (4, 1), (2, 3), (6, 2), (5, 5), (7, 1), (3, 6),
+        (1, 2), (4, 4), (1, 4), (0, 0), (6, 7), (3, 3), (5, 0), (4, 5), (1, 7), (1, 6)
     ]
 
     for (linha, coluna) in obstaculos:
         tabuleiro[linha][coluna] = "X"
 
     return tabuleiro
-
-
 
 def desenhar_tabuleiro(canvas, tabuleiro, caminho, posicao_inicial, destino):
     canvas.delete("all")
@@ -40,11 +31,7 @@ def desenhar_tabuleiro(canvas, tabuleiro, caminho, posicao_inicial, destino):
             cor = COR_FUNDO
             if tabuleiro[i][j] == "X":
                 cor = COR_OBSTACULO
-            elif (i, j) == posicao_inicial:
-                cor = COR_INICIO
-            elif (i, j) == destino:
-                cor = COR_DESTINO
-            elif (i, j) in caminho:
+            elif (i, j) in caminho or (i, j) == posicao_inicial or (i, j) == destino:
                 cor = COR_CAMINHO
 
             canvas.create_rectangle(
@@ -55,17 +42,14 @@ def desenhar_tabuleiro(canvas, tabuleiro, caminho, posicao_inicial, destino):
 
     canvas.update()
 
-
-
 def movimento_valido(tabuleiro, linha, coluna):
     return 0 <= linha < TAMANHO and 0 <= coluna < TAMANHO and tabuleiro[linha][coluna] == " "
-
 
 def encontrar_caminho(canvas, tabuleiro, linha_atual, coluna_atual, destino, caminho):
     global proximo_passo
 
     if (linha_atual, coluna_atual) == destino:
-        exibir_tela_final(canvas)  # Chama tela final ao chegar ao destino
+        exibir_tela_final(canvas, caminho, tabuleiro)
         return True
 
     direcoes = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -92,24 +76,40 @@ def encontrar_caminho(canvas, tabuleiro, linha_atual, coluna_atual, destino, cam
 
     return False
 
-
-
 def avancar_passo(event):
     global proximo_passo
     proximo_passo = True
 
-
-
-def exibir_tela_final(canvas):
+def exibir_tela_final(canvas, caminho, tabuleiro):
     canvas.delete("all")
+
     canvas.create_text(
-        TAMANHO_CELULA * TAMANHO // 2, TAMANHO_CELULA * TAMANHO // 2,
+        TAMANHO_CELULA * TAMANHO // 2, TAMANHO_CELULA // 3,
         text="🎉 CHEGOU AO DESTINO! 🎉",
         font=("Arial", 15, "bold"), fill="white"
     )
+    tamanho_mini = TAMANHO_CELULA // 3
+    tabuleiro_mini_width = tamanho_mini * TAMANHO
+    tabuleiro_mini_height = tamanho_mini * TAMANHO
+
+    x_offset = (TAMANHO_CELULA * TAMANHO - tabuleiro_mini_width) // 2
+    y_offset = (TAMANHO_CELULA * TAMANHO - tabuleiro_mini_height) // 2
+
+    for i in range(TAMANHO):
+        for j in range(TAMANHO):
+            cor = COR_FUNDO
+            if (i, j) in caminho:
+                cor = COR_CAMINHO
+            elif tabuleiro[i][j] == "X":
+                cor = COR_OBSTACULO
+
+            canvas.create_rectangle(
+                x_offset + j * tamanho_mini, y_offset + i * tamanho_mini,
+                x_offset + (j + 1) * tamanho_mini, y_offset + (i + 1) * tamanho_mini,
+                fill=cor, outline=COR_LINHA
+            )
+
     canvas.update()
-
-
 
 def exibir_menu_inicial(root, canvas):
     canvas.delete("all")
@@ -119,7 +119,6 @@ def exibir_menu_inicial(root, canvas):
         text="Clique ENTER para começar\nENTER para andar",
         font=("Arial", 15, "bold"), fill="red"
     )
-
 
     def animar_texto():
         cores = ["red", "green", "blue", "yellow", "purple", "white"]
@@ -131,23 +130,19 @@ def exibir_menu_inicial(root, canvas):
     root.after(100, animar_texto)
     root.bind("<Return>", lambda event: iniciar_jogo(root, canvas))
 
-
-
 def iniciar_jogo(root, canvas):
     tabuleiro = criar_tabuleiro()
 
     global posicao_inicial, destino
-    posicao_inicial = (4, 0)
-    destino = (0, 4)
+    posicao_inicial = (7, 0)
+    destino = (0, 7)
     caminho = [posicao_inicial]
 
     root.bind("<Return>", avancar_passo)
 
     desenhar_tabuleiro(canvas, tabuleiro, caminho, posicao_inicial, destino)
 
-    root.after(500,
-               lambda: encontrar_caminho(canvas, tabuleiro, posicao_inicial[0], posicao_inicial[1], destino, caminho))
-
+    root.after(500, lambda: encontrar_caminho(canvas, tabuleiro, posicao_inicial[0], posicao_inicial[1], destino, caminho))
 
 def main():
     root = tk.Tk()
@@ -160,6 +155,5 @@ def main():
     exibir_menu_inicial(root, canvas)
 
     root.mainloop()
-
 
 main()
