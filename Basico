@@ -1,0 +1,56 @@
+def mostrar_tabuleiro(tabuleiro):
+    for linha in tabuleiro:
+        print("| " + " ".join(linha) + " |")
+    print()
+
+
+def movimento_valido(tabuleiro, linha, coluna):
+    return 0 <= linha < len(tabuleiro) and 0 <= coluna < len(tabuleiro[0]) and tabuleiro[linha][coluna] == " "
+
+
+def encontrar_caminho(tabuleiro, linha_atual, coluna_atual, destino, caminho):
+    if (linha_atual, coluna_atual) == destino:
+        return True
+
+    direcoes = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+    for direcao in direcoes:
+        nova_linha = linha_atual + direcao[0]
+        nova_coluna = coluna_atual + direcao[1]
+
+        if movimento_valido(tabuleiro, nova_linha, nova_coluna):
+            tabuleiro[nova_linha][nova_coluna] = "*"
+            caminho.append((nova_linha, nova_coluna))
+
+            mostrar_tabuleiro(tabuleiro)
+
+            if encontrar_caminho(tabuleiro, nova_linha, nova_coluna, destino, caminho):
+                return True
+
+            caminho.pop()
+            tabuleiro[nova_linha][nova_coluna] = " "
+
+    return False
+
+# Função principal
+def main():
+    tabuleiro = [
+        [" ", " ", " ", " ", " "],
+        ["X", "X", " ", "X", " "],
+        [" ", " ", " ", " ", " "],
+        ["*", "X", "X", "X", " "]
+    ]
+
+    posicao_inicial = (3, 0)
+    destino = (0, 3)
+    caminho = [posicao_inicial]
+
+    mostrar_tabuleiro(tabuleiro)
+
+    if encontrar_caminho(tabuleiro, posicao_inicial[0], posicao_inicial[1], destino, caminho):
+        print("\nMelhor caminho encontrado!")
+        mostrar_tabuleiro(tabuleiro)
+    else:
+        print("Não foi possível encontrar um caminho válido.")
+
+main()
